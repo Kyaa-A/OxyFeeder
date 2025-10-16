@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'features/navigation/view/main_nav_host.dart';
+import 'package:provider/provider.dart';
+import 'features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'features/settings/viewmodel/settings_viewmodel.dart';
 
 void main() {
   runApp(const OxyFeederApp());
@@ -10,17 +13,27 @@ class OxyFeederApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.teal,
-          brightness: Brightness.dark,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<DashboardViewModel>(
+          create: (_) => DashboardViewModel(),
         ),
-        useMaterial3: true,
+        ChangeNotifierProvider<SettingsViewModel>(
+          create: (_) => SettingsViewModel(),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        themeMode: ThemeMode.dark,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.teal,
+            brightness: Brightness.dark,
+          ),
+          useMaterial3: true,
+        ),
+        home: const MainNavHost(),
       ),
-      home: const MainNavHost(),
     );
   }
 }
