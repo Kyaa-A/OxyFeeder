@@ -12,10 +12,78 @@ class SettingsScreen extends StatelessWidget {
         title: const Text('Settings'),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Placeholder for adding new schedules
-          // ignore: avoid_print
-          print('Add new feeding schedule');
+        onPressed: () async {
+          final timeController = TextEditingController();
+          final durationController = TextEditingController(text: '10');
+          bool enabled = true;
+          await showDialog<void>(
+            context: context,
+            builder: (ctx) {
+              return StatefulBuilder(
+                builder: (ctx, setState) {
+                  return AlertDialog(
+                    title: const Text('Add Feeding Schedule'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        TextField(
+                          controller: timeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Time Label',
+                            hintText: 'e.g., 08:00 AM',
+                          ),
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: durationController,
+                          decoration: const InputDecoration(
+                            labelText: 'Duration (seconds)',
+                            hintText: 'e.g., 10',
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: <Widget>[
+                            const Expanded(child: Text('Enabled')),
+                            Switch(
+                              value: enabled,
+                              onChanged: (v) => setState(() => enabled = v),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          final timeLabel = timeController.text.trim();
+                          final duration = int.tryParse(durationController.text.trim());
+                          if (timeLabel.isEmpty || duration == null) {
+                            Navigator.of(ctx).pop();
+                            return;
+                          }
+                          ctx.read<SettingsViewModel>().addSchedule(
+                                timeLabel: timeLabel,
+                                durationSeconds: duration,
+                                enabled: enabled,
+                              );
+                          Navigator.of(ctx).pop();
+                        },
+                        child: const Text('Add'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          );
         },
         child: const Icon(Icons.add),
       ),
@@ -35,10 +103,30 @@ class SettingsScreen extends StatelessWidget {
               builder: (context, viewModel, _) {
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: SwitchListTile(
-                    title: Text('${viewModel.feedingSchedules.first.timeLabel} - ${viewModel.feedingSchedules.first.durationSeconds} seconds feed'),
-                    value: true,
-                    onChanged: (bool v) => viewModel.toggleScheduleEnabled(0, v),
+                  child: Column(
+                    children: <Widget>[
+                      for (int i = 0; i < viewModel.feedingSchedules.length; i++) ...[
+                        ListTile(
+                          leading: const Icon(Icons.access_time),
+                          title: Text('${viewModel.feedingSchedules[i].timeLabel}'),
+                          subtitle: Text('${viewModel.feedingSchedules[i].durationSeconds} seconds feed'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Switch(
+                                value: viewModel.feedingSchedules[i].enabled,
+                                onChanged: (bool v) => viewModel.toggleScheduleEnabled(i, v),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () => viewModel.removeSchedule(i),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (i != viewModel.feedingSchedules.length - 1) const Divider(height: 1),
+                      ],
+                    ],
                   ),
                 );
               },

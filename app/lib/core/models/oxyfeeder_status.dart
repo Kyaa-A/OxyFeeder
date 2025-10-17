@@ -20,6 +20,18 @@ class OxyFeederStatus {
       batteryStatus: batteryStatus ?? this.batteryStatus,
     );
   }
+
+  factory OxyFeederStatus.fromJson(Map<String, dynamic> json) {
+    final doValue = json['do'];
+    final feedValue = json['feed'];
+    final batteryValue = json['battery'];
+
+    return OxyFeederStatus(
+      dissolvedOxygen: (doValue as num).toDouble(),
+      feedLevel: (feedValue as num).toInt(),
+      batteryStatus: (batteryValue as num).toInt(),
+    );
+  }
 }
 
 

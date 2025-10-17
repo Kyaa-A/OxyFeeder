@@ -39,6 +39,20 @@ class SettingsViewModel extends ChangeNotifier {
     _appSettings = _appSettings.copyWith(feedingSchedules: schedules);
     notifyListeners();
   }
+
+  void addSchedule({required String timeLabel, required int durationSeconds, bool enabled = true}) {
+    final schedules = List<FeedingSchedule>.from(_appSettings.feedingSchedules)
+      ..add(FeedingSchedule(timeLabel: timeLabel, durationSeconds: durationSeconds, enabled: enabled));
+    _appSettings = _appSettings.copyWith(feedingSchedules: schedules);
+    notifyListeners();
+  }
+
+  void removeSchedule(int index) {
+    final schedules = List<FeedingSchedule>.from(_appSettings.feedingSchedules)
+      ..removeAt(index);
+    _appSettings = _appSettings.copyWith(feedingSchedules: schedules);
+    notifyListeners();
+  }
 }
 
 
