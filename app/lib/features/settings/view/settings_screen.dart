@@ -7,7 +7,6 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsViewModel>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -32,13 +31,17 @@ class SettingsScreen extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: SwitchListTile(
-                title: Text('${settings.feedingSchedules.first.timeLabel} - ${settings.feedingSchedules.first.durationSeconds} seconds feed'),
-                value: settings.feedingSchedules.first.enabled,
-                onChanged: (bool v) => settings.toggleScheduleEnabled(0, v),
-              ),
+            Consumer<SettingsViewModel>(
+              builder: (context, viewModel, _) {
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: SwitchListTile(
+                    title: Text('${viewModel.feedingSchedules.first.timeLabel} - ${viewModel.feedingSchedules.first.durationSeconds} seconds feed'),
+                    value: true,
+                    onChanged: (bool v) => viewModel.toggleScheduleEnabled(0, v),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
 
@@ -50,50 +53,54 @@ class SettingsScreen extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Column(
-                  children: <Widget>[
-                    ListTile(
-                      title: const Text('Dissolved Oxygen'),
-                      subtitle: Slider(
-                        value: settings.minDissolvedOxygen,
-                        min: 0,
-                        max: 10,
-                        divisions: 20,
-                        label: '${settings.minDissolvedOxygen.toStringAsFixed(1)} mg/L',
-                        onChanged: settings.updateMinDissolvedOxygen,
-                      ),
+            Consumer<SettingsViewModel>(
+              builder: (context, viewModel, _) {
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      children: <Widget>[
+                        ListTile(
+                          title: const Text('Dissolved Oxygen'),
+                          subtitle: Slider(
+                            value: viewModel.minDissolvedOxygen,
+                            min: 2.0,
+                            max: 8.0,
+                            divisions: 12,
+                            label: '${viewModel.minDissolvedOxygen.toStringAsFixed(1)} mg/L',
+                            onChanged: viewModel.updateMinDissolvedOxygen,
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          title: const Text('Feed Level'),
+                          subtitle: Slider(
+                            value: viewModel.lowFeedThreshold.toDouble(),
+                            min: 0,
+                            max: 100,
+                            divisions: 20,
+                            label: '${viewModel.lowFeedThreshold} %',
+                            onChanged: (newValue) => viewModel.updateLowFeedThreshold(newValue.toInt()),
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          title: const Text('Battery Status'),
+                          subtitle: Slider(
+                            value: viewModel.lowBatteryThreshold.toDouble(),
+                            min: 0,
+                            max: 100,
+                            divisions: 20,
+                            label: '${viewModel.lowBatteryThreshold} %',
+                            onChanged: (newValue) => viewModel.updateLowBatteryThreshold(newValue.toInt()),
+                          ),
+                        ),
+                      ],
                     ),
-                    const Divider(height: 1),
-                    ListTile(
-                      title: const Text('Feed Level'),
-                      subtitle: Slider(
-                        value: settings.lowFeedThreshold.toDouble(),
-                        min: 0,
-                        max: 100,
-                        divisions: 20,
-                        label: '${settings.lowFeedThreshold} %',
-                        onChanged: (v) => settings.updateLowFeedThreshold(v.round()),
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      title: const Text('Battery Status'),
-                      subtitle: Slider(
-                        value: settings.lowBatteryThreshold.toDouble(),
-                        min: 0,
-                        max: 100,
-                        divisions: 20,
-                        label: '${settings.lowBatteryThreshold} %',
-                        onChanged: (v) => settings.updateLowBatteryThreshold(v.round()),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
 
@@ -133,23 +140,27 @@ class SettingsScreen extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                children: <Widget>[
-                  SwitchListTile(
-                    title: const Text('Enable Notifications'),
-                    value: settings.notificationsEnabled,
-                    onChanged: settings.updateNotificationsEnabled,
+            Consumer<SettingsViewModel>(
+              builder: (context, viewModel, _) {
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Column(
+                    children: <Widget>[
+                      SwitchListTile(
+                        title: const Text('Enable Notifications'),
+                        value: viewModel.notificationsEnabled,
+                        onChanged: viewModel.updateNotificationsEnabled,
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        title: const Text('About'),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () {},
+                      ),
+                    ],
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    title: const Text('About'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {},
-                  ),
-                ],
-              ),
+                );
+              },
             ),
             const SizedBox(height: 8),
           ],
