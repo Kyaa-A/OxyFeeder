@@ -13,12 +13,12 @@ class SensorsViewModel extends ChangeNotifier {
 
   final List<FlSpot> _historicalDoData = <FlSpot>[
     const FlSpot(0, 6.0),
-    const FlSpot(4, 6.3),
-    const FlSpot(8, 5.8),
-    const FlSpot(12, 6.5),
-    const FlSpot(16, 7.2),
-    const FlSpot(20, 7.0),
-    const FlSpot(24, 6.8),
+    const FlSpot(1, 6.3),
+    const FlSpot(2, 5.8),
+    const FlSpot(3, 6.5),
+    const FlSpot(4, 7.2),
+    const FlSpot(5, 7.0),
+    const FlSpot(6, 6.8),
   ];
 
   final String _lastCalibratedDate = '2025-10-26';
@@ -45,13 +45,17 @@ class SensorsViewModel extends ChangeNotifier {
   }
 
   void addHistoricalDoData(double doValue) {
-    // Use next X based on last point + 1 (hour) for demo purposes
-    final double nextX = _historicalDoData.isEmpty ? 0 : _historicalDoData.last.x + 1;
-    _historicalDoData.add(FlSpot(nextX, doValue));
-    // Keep only the last 24 points
-    if (_historicalDoData.length > 24) {
-      _historicalDoData.removeRange(0, _historicalDoData.length - 24);
+    // Append new Y value
+    final List<double> ys = _historicalDoData.map((e) => e.y).toList()..add(doValue);
+    // Keep sliding window of last 24 values
+    const int window = 24;
+    if (ys.length > window) {
+      ys.removeRange(0, ys.length - window);
     }
+    // Reindex X consecutively so the chart spans the full width
+    _historicalDoData
+      ..clear()
+      ..addAll(List<FlSpot>.generate(ys.length, (i) => FlSpot(i.toDouble(), ys[i])));
     notifyListeners();
   }
 

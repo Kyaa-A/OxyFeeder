@@ -87,15 +87,10 @@ class SensorsScreen extends StatelessWidget {
                       backgroundColor: Colors.transparent,
                       gridData: FlGridData(
                         show: true,
-                        drawVerticalLine: true,
+                        drawVerticalLine: false,
                         horizontalInterval: 1,
-                        verticalInterval: 1,
                         getDrawingHorizontalLine: (value) => FlLine(
                           color: Colors.white24,
-                          strokeWidth: 1,
-                        ),
-                        getDrawingVerticalLine: (value) => FlLine(
-                          color: Colors.white12,
                           strokeWidth: 1,
                         ),
                       ),
@@ -111,8 +106,11 @@ class SensorsScreen extends StatelessWidget {
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 28,
-                            interval: 4,
+                            interval: viewModel.historicalDoData.length > 1
+                                ? (viewModel.historicalDoData.length / 6).ceilToDouble()
+                                : 1,
                             getTitlesWidget: (value, meta) {
+                              if (value % 1 != 0) return const SizedBox.shrink();
                               return Text(value.toInt().toString(), style: const TextStyle(fontSize: 10));
                             },
                           ),
@@ -142,7 +140,9 @@ class SensorsScreen extends StatelessWidget {
                         ),
                       ),
                           minX: 0,
-                          maxX: viewModel.historicalDoData.isEmpty ? 24 : viewModel.historicalDoData.last.x,
+                          maxX: viewModel.historicalDoData.isEmpty
+                              ? 23
+                              : (viewModel.historicalDoData.length - 1).toDouble(),
                       minY: 2,
                       maxY: 10,
                           lineBarsData: [
