@@ -62,13 +62,17 @@ void controlFeederMotor(int durationSeconds) {
 
 void setup() {
   Serial.begin(9600);
+  Serial1.begin(9600);
   while (!Serial) {
     ; // wait for serial port to connect (needed for some boards/USB)
   }
 
   Serial.println("OxyFeeder Firmware Initializing...");
+  Serial.println("USB Serial: Ready for debug messages");
+  Serial.println("Hardware Serial1: Ready for ESP32 communication");
   // TODO: Initialize sensors here (HX711, DO sensor interface, voltage sensor, RTC, etc.)
   // TODO: Initialize motor driver pins and default states
+  Serial.println("Setup complete - entering main loop");
 }
 
 // ----------------------------------------------------------------------------
@@ -91,14 +95,14 @@ void loop() {
   }
 
   // OUTPUT: Print structured status packet (e.g., JSON) for ESP32/app
-  Serial.print("{");
-  Serial.print("\"do\": ");
-  Serial.print(currentDissolvedOxygenMgL, 1);
-  Serial.print(", \"feed\": ");
-  Serial.print(currentFeedLevelPercent);
-  Serial.print(", \"battery\": ");
-  Serial.print(currentBatteryPercent);
-  Serial.println("}");
+  Serial1.print("{");
+  Serial1.print("\"do\": ");
+  Serial1.print(currentDissolvedOxygenMgL, 1);
+  Serial1.print(", \"feed\": ");
+  Serial1.print(currentFeedLevelPercent);
+  Serial1.print(", \"battery\": ");
+  Serial1.print(currentBatteryPercent);
+  Serial1.println("}");
 
   // Loop cadence: simulate 5-second sensor update interval
   delay(5000);
