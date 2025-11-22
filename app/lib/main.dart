@@ -5,6 +5,7 @@ import 'features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'features/settings/viewmodel/settings_viewmodel.dart';
 import 'features/sensors/viewmodel/sensors_viewmodel.dart';
 import 'core/services/mock_bluetooth_service.dart';
+// import 'core/services/real_bluetooth_service.dart'; // Uncomment for Phase 3
 
 void main() {
   runApp(const OxyFeederApp());
@@ -17,6 +18,9 @@ class OxyFeederApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // ============================================================
+        // PHASE 2: Use MockBluetoothService (simulated data)
+        // ============================================================
         Provider<MockBluetoothService>(
           create: (_) => MockBluetoothService(),
           dispose: (_, svc) => svc.dispose(),
@@ -24,11 +28,32 @@ class OxyFeederApp extends StatelessWidget {
         ChangeNotifierProvider<DashboardViewModel>(
           create: (ctx) => DashboardViewModel(ctx.read<MockBluetoothService>()),
         ),
-        ChangeNotifierProvider<SettingsViewModel>(
-          create: (_) => SettingsViewModel(),
-        ),
         ChangeNotifierProvider<SensorsViewModel>(
           create: (ctx) => SensorsViewModel(ctx.read<MockBluetoothService>()),
+        ),
+
+        // ============================================================
+        // PHASE 3: Swap to RealBluetoothService (real hardware)
+        // ============================================================
+        // To connect to real hardware:
+        // 1. Comment out the MockBluetoothService provider above
+        // 2. Uncomment the lines below
+        // 3. Uncomment the import at the top of this file
+        // ============================================================
+        // Provider<RealBluetoothService>(
+        //   create: (_) => RealBluetoothService(),
+        //   dispose: (_, svc) => svc.dispose(),
+        // ),
+        // ChangeNotifierProvider<DashboardViewModel>(
+        //   create: (ctx) => DashboardViewModel(ctx.read<RealBluetoothService>()),
+        // ),
+        // ChangeNotifierProvider<SensorsViewModel>(
+        //   create: (ctx) => SensorsViewModel(ctx.read<RealBluetoothService>()),
+        // ),
+
+        // Settings ViewModel (no bluetooth dependency)
+        ChangeNotifierProvider<SettingsViewModel>(
+          create: (_) => SettingsViewModel(),
         ),
       ],
       child: MaterialApp(

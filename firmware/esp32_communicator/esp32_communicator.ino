@@ -71,7 +71,8 @@ void setup() {
   }
   
   // Initialize Serial2 to communicate with Arduino Mega
-  Serial2.begin(9600, SERIAL_8N1, 16, 17); // RX=16, TX=17 (adjust pins as needed)
+  // RX2=Pin 17 (receives from Arduino TX1), TX2=Pin 16 (sends to Arduino RX1)
+  Serial2.begin(9600, SERIAL_8N1, 17, 16); // RX=17, TX=16
   
   Serial.println("ESP32 OxyFeeder Communicator Starting...");
   Serial.println("Serial2 initialized for Arduino communication");

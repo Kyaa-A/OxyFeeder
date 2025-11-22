@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:math';
 import '../../core/models/oxyfeeder_status.dart';
+import 'bluetooth_service_interface.dart';
 
-class MockBluetoothService {
+class MockBluetoothService implements BluetoothServiceInterface {
   final StreamController<OxyFeederStatus> _statusStreamController = StreamController<OxyFeederStatus>.broadcast();
+
+  @override
   Stream<OxyFeederStatus> get statusStream => _statusStreamController.stream;
 
   Timer? _timer;
@@ -24,6 +27,7 @@ class MockBluetoothService {
     });
   }
 
+  @override
   void dispose() {
     _timer?.cancel();
     _statusStreamController.close();

@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/models/oxyfeeder_status.dart';
-import '../../../core/services/mock_bluetooth_service.dart';
+import '../../../core/services/bluetooth_service_interface.dart';
 
 class SensorsViewModel extends ChangeNotifier {
-  final MockBluetoothService _mockService;
+  final BluetoothServiceInterface _bluetoothService;
+  StreamSubscription<OxyFeederStatus>? _statusSubscription;
+
   OxyFeederStatus _currentStatus = const OxyFeederStatus(
     dissolvedOxygen: 6.5,
     feedLevel: 75,
@@ -25,8 +28,8 @@ class SensorsViewModel extends ChangeNotifier {
   final String _feedLoadCellRawValue = '12345';
   final String _batteryVoltage = '12.8V';
 
-  SensorsViewModel(this._mockService) {
-    _mockService.statusStream.listen((event) {
+  SensorsViewModel(this._bluetoothService) {
+    _statusSubscription = _bluetoothService.statusStream.listen((event) {
       updateLiveData(event);
       addHistoricalDoData(event.dissolvedOxygen);
     });
@@ -61,6 +64,7 @@ class SensorsViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _statusSubscription?.cancel();
     super.dispose();
   }
 }

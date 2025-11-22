@@ -32,19 +32,33 @@ const unsigned long feedIntervalMs = 30UL * 1000UL; // simulate feed every 30s
 // Simulate Dissolved Oxygen (mg/L)
 float readDissolvedOxygen() {
   // TODO: Replace with real DO sensor reading (analog read + calibration)
-  return 7.8; // realistic placeholder value
+  // Simulate realistic variation for testing (5.0 - 8.5 mg/L range)
+  static float value = 7.8;
+  value += random(-10, 11) / 100.0; // Add ±0.1 variation
+  value = constrain(value, 5.0, 8.5); // Keep in realistic range
+  return value;
 }
 
 // Simulate Feed Level (%)
 int readFeedLevel() {
   // TODO: Replace with load cell + HX711 reading converted to percent
-  return 62; // realistic placeholder value
+  // Simulate gradual decrease (feed being consumed)
+  static int value = 62;
+  if (random(0, 100) < 5) { // 5% chance to decrease by 1%
+    value = constrain(value - 1, 0, 100);
+  }
+  return value;
 }
 
 // Simulate Battery Status (%)
 int readBatteryVoltage() {
   // TODO: Replace with voltage sensor reading and mapping to percentage
-  return 85; // realistic placeholder value
+  // Simulate slow discharge and solar charging
+  static int value = 85;
+  // Random walk: small variations to simulate charging/discharging
+  value += random(-1, 2); // -1, 0, or +1
+  value = constrain(value, 20, 100); // Keep realistic (20-100%)
+  return value;
 }
 
 // Simulate motor control for feeding
@@ -66,6 +80,9 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect (needed for some boards/USB)
   }
+
+  // Initialize random seed for realistic simulated sensor variations
+  randomSeed(analogRead(0));
 
   Serial.println("OxyFeeder Firmware Initializing...");
   Serial.println("USB Serial: Ready for debug messages");

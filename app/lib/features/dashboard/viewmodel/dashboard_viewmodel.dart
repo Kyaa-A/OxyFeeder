@@ -1,17 +1,20 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../core/models/oxyfeeder_status.dart';
-import '../../../core/services/mock_bluetooth_service.dart';
+import '../../../core/services/bluetooth_service_interface.dart';
 
 class DashboardViewModel extends ChangeNotifier {
-  final MockBluetoothService _mockService;
+  final BluetoothServiceInterface _bluetoothService;
+  StreamSubscription<OxyFeederStatus>? _statusSubscription;
+
   OxyFeederStatus _status = const OxyFeederStatus(
     dissolvedOxygen: 7.5,
     feedLevel: 80,
     batteryStatus: 90,
   );
 
-  DashboardViewModel(this._mockService) {
-    _mockService.statusStream.listen((event) {
+  DashboardViewModel(this._bluetoothService) {
+    _statusSubscription = _bluetoothService.statusStream.listen((event) {
       updateStatus(event);
     });
   }
@@ -25,6 +28,7 @@ class DashboardViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _statusSubscription?.cancel();
     super.dispose();
   }
 }
