@@ -109,7 +109,9 @@ class RealBluetoothService implements BluetoothServiceInterface {
       });
 
       // Connect to device
-      await device.connect(timeout: const Duration(seconds: 15));
+      await device.connect(
+        license: License.free,  // Using free license (individuals, nonprofits, orgs <50 employees)
+      );
       print('RealBluetoothService: Connected successfully');
 
       // Discover services
