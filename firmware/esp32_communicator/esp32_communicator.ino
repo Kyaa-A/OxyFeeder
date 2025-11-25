@@ -72,7 +72,7 @@ void setup() {
   
   // Initialize Serial2 to communicate with Arduino Mega
   // RX2=Pin 17 (receives from Arduino TX1), TX2=Pin 16 (sends to Arduino RX1)
-  Serial2.begin(9600, SERIAL_8N1, 17, 16); // RX=17, TX=16
+  Serial2.begin(9600, SERIAL_8N1, 16, 17); // RX=17, TX=16
   
   Serial.println("ESP32 OxyFeeder Communicator Starting...");
   Serial.println("Serial2 initialized for Arduino communication");
@@ -83,8 +83,8 @@ void setup() {
   pServer->setCallbacks(new MyServerCallbacks());
 
   // Create BLE Service
-  BLEService *pService = pServer->getServer()->createService(SERVICE_UUID);
-  
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+
   // Create BLE Characteristic for data transmission
   pCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID,
