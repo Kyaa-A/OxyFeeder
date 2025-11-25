@@ -8,6 +8,7 @@ OxyFeeder is an IoT aquaculture monitoring and feeding system consisting of:
 - **Flutter mobile app** for monitoring dissolved oxygen, feed level, battery status, and controlling feeding schedules
 - **Arduino Mega firmware** for sensor reading and motor control
 - **ESP32 BLE bridge** for wireless communication between hardware and mobile app
+- **ESP32-CAM server** (optional) for live video streaming of the fishpond
 
 The system monitors fishpond conditions and automates fish feeding based on schedules.
 
@@ -261,8 +262,9 @@ Build Logic Level Shifter "Bridge" board:
 - **App entry point**: `app/lib/main.dart`
 - **Data model**: `app/lib/core/models/oxyfeeder_status.dart`
 - **Mock service**: `app/lib/core/services/mock_bluetooth_service.dart`
-- **ESP32 firmware**: `firmware/esp32_communicator/esp32_communicator.ino`
 - **Arduino firmware**: `firmware/oxyfeeder_firmware/oxyfeeder_firmware.ino`
+- **ESP32 BLE firmware**: `firmware/esp32_communicator/esp32_communicator.ino`
+- **ESP32-CAM firmware**: `firmware/camera_server/camera_server.ino`
 - **Development guide**: `docs/development_cheatsheet.md`
 - **Project roadmap**: `docs/roadmap.md`
 
@@ -316,11 +318,21 @@ When upgrading from simulated to real sensor data:
 - Select correct COM port
 - Upload
 
-**ESP32:**
+**ESP32 (BLE Bridge):**
 - Open `firmware/esp32_communicator/esp32_communicator.ino` in Arduino IDE
 - Select board: "ESP32 Dev Module" (or appropriate variant)
 - Select correct COM port
 - Upload
+
+**ESP32-CAM (Camera Server):**
+- Connect FTDI programmer: 5V→5V, GND→GND, TX→U0R, RX→U0T, IO0→GND
+- Open `firmware/camera_server/camera_server.ino` in Arduino IDE
+- Update `WIFI_SSID` and `WIFI_PASSWORD` in the code
+- Select board: "AI Thinker ESP32-CAM"
+- Select correct COM port, click Upload
+- After upload: Disconnect IO0 from GND, press RESET
+- Open Serial Monitor (115200 baud) to see the camera's IP address
+- Access stream at: `http://<IP_ADDRESS>/stream`
 
 **Testing Hub After Flash:**
 1. Connect both devices to PC via USB
