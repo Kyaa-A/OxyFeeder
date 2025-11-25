@@ -109,7 +109,7 @@ class RealBluetoothService implements BluetoothServiceInterface {
     }
 
     _updateState(BleConnectionState.scanning);
-    print('RealBluetoothService: Starting scan for $deviceName...');
+    print('RealBluetoothService: Starting scan for $deviceName or service $serviceUuid...');
 
     try {
       // Stop any existing scan
@@ -117,9 +117,10 @@ class RealBluetoothService implements BluetoothServiceInterface {
 
       BluetoothDevice? targetDevice;
 
-      // Start scanning
+      // Start scanning - no filter, scan all devices
       await FlutterBluePlus.startScan(
-        timeout: const Duration(seconds: 15),
+        timeout: const Duration(seconds: 20),
+        androidScanMode: AndroidScanMode.lowLatency, // Faster scanning
       );
 
       // Listen for scan results
@@ -127,12 +128,28 @@ class RealBluetoothService implements BluetoothServiceInterface {
 
       _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
         for (final result in results) {
-          final name = result.device.platformName.isNotEmpty
-              ? result.device.platformName
-              : result.advertisementData.advName;
+          // Try multiple name sources
+          final platformName = result.device.platformName;
+          final advName = result.advertisementData.advName;
+          final serviceUuids = result.advertisementData.serviceUuids;
 
-          if (name == deviceName) {
-            print('RealBluetoothService: Found $deviceName: ${result.device.remoteId}');
+          // Debug: print all devices found
+          print('RealBluetoothService: Found device - name: "$platformName/$advName", services: $serviceUuids, id: ${result.device.remoteId}');
+
+          // Check if device advertises our service UUID
+          final hasServiceUuid = serviceUuids.any((uuid) =>
+            uuid.toString().toLowerCase() == serviceUuid.toLowerCase()
+          );
+
+          // Check name match
+          final names = [platformName, advName];
+          final hasNameMatch = names.any((n) =>
+            n.toLowerCase() == deviceName.toLowerCase() ||
+            n.toLowerCase().contains('oxy')
+          );
+
+          if (hasServiceUuid || hasNameMatch) {
+            print('RealBluetoothService: MATCH! Found device: ${result.device.remoteId} (serviceMatch: $hasServiceUuid, nameMatch: $hasNameMatch)');
             targetDevice = result.device;
             FlutterBluePlus.stopScan();
             if (!completer.isCompleted) {
@@ -175,32 +192,48 @@ class RealBluetoothService implements BluetoothServiceInterface {
     try {
       _connectedDevice = device;
 
-      // Listen for connection state changes
+      // Connect to device
+      await device.connect(
+        timeout: const Duration(seconds: 30),
+        autoConnect: false,
+        license: License.free,
+      );
+      print('RealBluetoothService: Connected successfully');
+
+      // Longer delay to let connection stabilize
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Listen for connection state changes AFTER connection is established
       _connectionStateSubscription = device.connectionState.listen((state) {
         print('RealBluetoothService: Connection state: $state');
-        if (state == BluetoothConnectionState.disconnected) {
+        if (state == BluetoothConnectionState.disconnected &&
+            _currentState == BleConnectionState.connected) {
           _updateState(BleConnectionState.disconnected);
           _handleDisconnection();
         }
       });
 
-      // Connect to device
-      await device.connect(
-        timeout: const Duration(seconds: 15),
-        autoConnect: false,
-      );
-      print('RealBluetoothService: Connected successfully');
+      // Another delay before service discovery
+      await Future.delayed(const Duration(milliseconds: 500));
 
       // Discover services
       print('RealBluetoothService: Discovering services...');
       final services = await device.discoverServices();
 
-      // Find OxyFeeder service
+      // Debug: print all discovered services
+      print('RealBluetoothService: Found ${services.length} services:');
+      for (final service in services) {
+        print('RealBluetoothService:   Service: ${service.uuid}');
+      }
+
+      // Find OxyFeeder service - check if UUID contains our short UUID
       BluetoothService? targetService;
       for (final service in services) {
-        if (service.uuid.toString().toLowerCase() == serviceUuid.toLowerCase()) {
+        final uuid = service.uuid.toString().toLowerCase();
+        // Check both full UUID and short UUID (abcd)
+        if (uuid == serviceUuid.toLowerCase() || uuid.contains('abcd')) {
           targetService = service;
-          print('RealBluetoothService: Found OxyFeeder service');
+          print('RealBluetoothService: Found OxyFeeder service: $uuid');
           break;
         }
       }
@@ -213,11 +246,14 @@ class RealBluetoothService implements BluetoothServiceInterface {
       }
 
       // Find data characteristic
+      print('RealBluetoothService: Found ${targetService.characteristics.length} characteristics:');
       for (final characteristic in targetService.characteristics) {
-        if (characteristic.uuid.toString().toLowerCase() ==
-            characteristicUuid.toLowerCase()) {
+        print('RealBluetoothService:   Characteristic: ${characteristic.uuid}');
+        final uuid = characteristic.uuid.toString().toLowerCase();
+        // Check both full UUID and short UUID (abce)
+        if (uuid == characteristicUuid.toLowerCase() || uuid.contains('abce')) {
           _dataCharacteristic = characteristic;
-          print('RealBluetoothService: Found data characteristic');
+          print('RealBluetoothService: Found data characteristic: $uuid');
           break;
         }
       }
@@ -246,17 +282,32 @@ class RealBluetoothService implements BluetoothServiceInterface {
   Future<void> _listenToData() async {
     if (_dataCharacteristic == null) return;
 
-    // Enable notifications
-    await _dataCharacteristic!.setNotifyValue(true);
-    print('RealBluetoothService: Notifications enabled');
+    try {
+      // Small delay before enabling notifications
+      await Future.delayed(const Duration(milliseconds: 500));
 
-    // Listen to incoming data
-    _notificationSubscription =
-        _dataCharacteristic!.lastValueStream.listen((data) {
-      if (data.isNotEmpty) {
-        _parseAndEmitData(data);
-      }
-    });
+      // Enable notifications
+      print('RealBluetoothService: Enabling notifications...');
+      await _dataCharacteristic!.setNotifyValue(true);
+      print('RealBluetoothService: Notifications enabled');
+
+      // Another delay after enabling
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Listen to incoming data using onValueReceived instead of lastValueStream
+      _notificationSubscription =
+          _dataCharacteristic!.onValueReceived.listen((data) {
+        if (data.isNotEmpty) {
+          _parseAndEmitData(data);
+        }
+      }, onError: (error) {
+        print('RealBluetoothService: Notification stream error: $error');
+      }, cancelOnError: false);
+
+      print('RealBluetoothService: Listening to data stream');
+    } catch (e) {
+      print('RealBluetoothService: Error setting up notifications: $e');
+    }
   }
 
   /// Parse JSON data from ESP32 and emit OxyFeederStatus

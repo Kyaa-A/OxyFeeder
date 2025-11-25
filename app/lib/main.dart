@@ -8,6 +8,7 @@ import 'features/sensors/viewmodel/sensors_viewmodel.dart';
 import 'core/services/real_bluetooth_service.dart'; // Phase 3 (real hardware)
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const OxyFeederApp());
 }
 
