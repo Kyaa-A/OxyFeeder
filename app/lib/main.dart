@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'features/settings/viewmodel/settings_viewmodel.dart';
 import 'features/sensors/viewmodel/sensors_viewmodel.dart';
-import 'core/services/mock_bluetooth_service.dart';
-// import 'core/services/real_bluetooth_service.dart'; // Uncomment for Phase 3
+// import 'core/services/mock_bluetooth_service.dart'; // Phase 2 (mock data)
+import 'core/services/real_bluetooth_service.dart'; // Phase 3 (real hardware)
 
 void main() {
   runApp(const OxyFeederApp());
@@ -19,36 +19,36 @@ class OxyFeederApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // ============================================================
-        // PHASE 2: Use MockBluetoothService (simulated data)
+        // PHASE 3: RealBluetoothService (real hardware)
         // ============================================================
-        Provider<MockBluetoothService>(
-          create: (_) => MockBluetoothService(),
+        Provider<RealBluetoothService>(
+          create: (_) => RealBluetoothService(),
           dispose: (_, svc) => svc.dispose(),
         ),
         ChangeNotifierProvider<DashboardViewModel>(
-          create: (ctx) => DashboardViewModel(ctx.read<MockBluetoothService>()),
+          create: (ctx) => DashboardViewModel(ctx.read<RealBluetoothService>()),
         ),
         ChangeNotifierProvider<SensorsViewModel>(
-          create: (ctx) => SensorsViewModel(ctx.read<MockBluetoothService>()),
+          create: (ctx) => SensorsViewModel(ctx.read<RealBluetoothService>()),
         ),
 
         // ============================================================
-        // PHASE 3: Swap to RealBluetoothService (real hardware)
+        // PHASE 2: MockBluetoothService (simulated data) - DISABLED
         // ============================================================
-        // To connect to real hardware:
-        // 1. Comment out the MockBluetoothService provider above
+        // To use mock data instead of real hardware:
+        // 1. Comment out the RealBluetoothService provider above
         // 2. Uncomment the lines below
-        // 3. Uncomment the import at the top of this file
+        // 3. Update the import at the top of this file
         // ============================================================
-        // Provider<RealBluetoothService>(
-        //   create: (_) => RealBluetoothService(),
+        // Provider<MockBluetoothService>(
+        //   create: (_) => MockBluetoothService(),
         //   dispose: (_, svc) => svc.dispose(),
         // ),
         // ChangeNotifierProvider<DashboardViewModel>(
-        //   create: (ctx) => DashboardViewModel(ctx.read<RealBluetoothService>()),
+        //   create: (ctx) => DashboardViewModel(ctx.read<MockBluetoothService>()),
         // ),
         // ChangeNotifierProvider<SensorsViewModel>(
-        //   create: (ctx) => SensorsViewModel(ctx.read<RealBluetoothService>()),
+        //   create: (ctx) => SensorsViewModel(ctx.read<MockBluetoothService>()),
         // ),
 
         // Settings ViewModel (no bluetooth dependency)
