@@ -22,15 +22,23 @@ Before starting, gather everything:
 - [ ] Cable glands (various sizes)
 - [ ] Standoffs, screws, double-sided tape/velcro
 - [ ] Drill with appropriate bits
+- [ ] Cable zip ties
 
 ### Power System
 - [ ] Solar Panel
 - [ ] MPPT Charge Controller
-- [ ] 12V Battery
+- [ ] 12V Lead Acid Battery
 - [ ] Master Switch
 - [ ] 12V Fuse Box
 - [ ] Fuses: 5A (x3), 10A (x1)
-- [ ] Wires: 16 AWG (power), 22 AWG (signals)
+- [ ] DC-DC Buck Converter (12V to 5V)
+- [ ] Wires: 14-16 AWG (power), 22 AWG (signals)
+
+### Wiring Accessories
+- [ ] Wire Ferrules Kit
+- [ ] Ring Terminals
+- [ ] JST Connector Set
+- [ ] Heat Shrink Tubing
 
 ### Electronics
 - [ ] Arduino Mega 2560
@@ -38,14 +46,21 @@ Before starting, gather everything:
 - [ ] ESP32-CAM module
 - [ ] Logic Level Shifter (on perfboard)
 - [ ] L298N Motor Driver
+- [ ] 12V DC Gear Motor
 - [ ] Servo Motor
 
 ### Sensors
-- [ ] DO Sensor (DFRobot)
+- [ ] DO Sensor (DFRobot Gravity Analog)
 - [ ] HX711 + Load Cell
 - [ ] DS3231 RTC Module
 - [ ] Voltage Sensor Module
-- [ ] I2C LCD Display
+- [ ] TFT LCD Display
+
+### Protection Components
+- [ ] 1000uF Capacitor
+- [ ] 0.1uF Ceramic Capacitors
+- [ ] 10k Resistors (spare)
+- [ ] Flyback Diodes
 
 ---
 
@@ -62,7 +77,9 @@ Place these components inside and move them around until they fit nicely:
 - Battery (keep at bottom - it's heavy)
 - MPPT Controller
 - Fuse Box
+- Buck Converter
 - Arduino + ESP32 perfboard
+- L298N Motor Driver
 
 ```
 ┌─────────────────────────────────────────┐
@@ -78,9 +95,10 @@ Place these components inside and move them around until they fit nicely:
 │  │  Motor   │  │                │      │
 │  └──────────┘  └────────────────┘      │
 │                                         │
-│  ┌──────────────────────────────┐      │
-│  │         MPPT Controller      │      │
-│  └──────────────────────────────┘      │
+│  ┌──────────┐  ┌────────────────┐      │
+│  │  Buck    │  │     MPPT       │      │
+│  │Converter │  │   Controller   │      │
+│  └──────────┘  └────────────────┘      │
 │                                         │
 │  ┌──────────────────────────────┐      │
 │  │         BATTERY (bottom)     │      │
@@ -95,12 +113,12 @@ Place these components inside and move them around until they fit nicely:
 Mark where wires need to come in:
 - Solar panel cables
 - Motor wires
-- Sensor probe (DO sensor)
+- DO sensor probe
 - Load cell wires
 
-Drill those holes. Install cable glands.
+Drill those holes. Install **cable glands** to seal them.
 
-## Step 4: Screw Everything Down
+## Step 4: Mount Components
 
 Mount components securely:
 - **Battery**: Must be secured (screws or straps)
@@ -116,7 +134,7 @@ Mount components securely:
 
 # MISSION 2: Power Backbone
 
-**Goal:** Get power to the Fuse Box and Arduino. NO SENSORS YET.
+**Goal:** Get power to Fuse Box, Arduino, Motor Driver, and Buck Converter. NO SENSORS YET.
 
 ## Power Flow Diagram
 
@@ -147,17 +165,27 @@ BATTERY   LOAD OUTPUT
 ┌──────────────────────────────────┐
 │         12V FUSE BOX             │
 │  ┌────┐ ┌────┐ ┌────┐ ┌────┐   │
-│  │ 5A │ │ 5A │ │10A │ │ 5A │   │
+│  │ 5A │ │10A │ │ 5A │ │ 5A │   │
 │  └──┬─┘ └──┬─┘ └──┬─┘ └──┬─┘   │
 └─────┼──────┼──────┼──────┼─────┘
       │      │      │      │
       ▼      ▼      ▼      ▼
-   Arduino  CAM   Motor  Spare
-    Vin     5V    Driver
+   Arduino  Motor  Buck   Spare
+    Vin    Driver  Conv.
+                    │
+                    ▼
+              5V Rail ──→ Servo + ESP32-CAM
 ```
+
+## Wiring Tips: Use Your Accessories!
+
+- **Ferrules**: Crimp onto every wire going into MPPT, Fuse Box, or screw terminals
+- **Ring Terminals**: Use on battery bolt connections
+- **Heat Shrink**: Cover any soldered joints
 
 ## Step 1: Battery to MPPT Controller
 
+Crimp **ring terminals** onto battery wires:
 ```
 Battery (+) ────→ MPPT "BATT+" terminal
 Battery (-) ────→ MPPT "BATT-" terminal
@@ -167,13 +195,15 @@ Battery (-) ────→ MPPT "BATT-" terminal
 
 ## Step 2: Solar to MPPT Controller
 
+Pass solar wires through cable gland. Crimp **ferrules**:
 ```
-Solar (+) ────→ MPPT "SOLAR+" terminal
-Solar (-) ────→ MPPT "SOLAR-" terminal
+Solar (+) ────→ MPPT "PV+" terminal
+Solar (-) ────→ MPPT "PV-" terminal
 ```
 
 ## Step 3: MPPT Load to Fuse Box
 
+Crimp **ferrules** on these wires:
 ```
 MPPT "LOAD+" ──→ 15A Fuse ──→ Master Switch ──→ Fuse Box (+)
 MPPT "LOAD-" ──→ Fuse Box Ground Bus (-)
@@ -182,7 +212,7 @@ MPPT "LOAD-" ──→ Fuse Box Ground Bus (-)
 ## Step 4: Power the Arduino
 
 1. Insert **5A fuse** into Fuse Box Slot 1
-2. Wire it:
+2. Crimp **ferrules** and wire:
 ```
 Fuse Box Slot 1 Output ────→ Arduino "Vin" pin
 Fuse Box Ground        ────→ Arduino "GND" pin
@@ -197,6 +227,21 @@ Fuse Box Slot 2 Output ────→ L298N "+12V" terminal
 Fuse Box Ground        ────→ L298N "GND" terminal
 ```
 
+## Step 6: Power the Buck Converter
+
+1. Insert **5A fuse** into Fuse Box Slot 3
+2. Wire it:
+```
+Fuse Box Slot 3 Output ────→ Buck Converter "IN+"
+Fuse Box Ground        ────→ Buck Converter "IN-"
+```
+
+3. **IMPORTANT: Adjust Buck Converter to 5V!**
+   - Use multimeter on output terminals
+   - Turn the potentiometer until it reads exactly **5.0V**
+
+This 5V rail powers the Servo and ESP32-CAM (they need more current than Arduino can provide).
+
 ---
 
 # STOP. MISSION 2 COMPLETE.
@@ -205,14 +250,19 @@ Fuse Box Ground        ────→ L298N "GND" terminal
 1. Turn on Master Switch
 2. Does Arduino LED light up?
 3. Does Motor Driver LED light up?
-4. If YES → Turn off and continue
-5. If NO → Check connections with multimeter
+4. Does Buck Converter output show 5V on multimeter?
+5. If YES → Turn off and continue
+6. If NO → Check connections with multimeter
 
 ---
 
 # MISSION 3: Sensors (The "Nerves")
 
 **Goal:** Connect sensors to Arduino. One group at a time.
+
+**Pro Tips:**
+- Use **JST connectors** for wires leaving the box (DO probe, load cell) so you can unplug later
+- Solder **0.1uF ceramic capacitors** across VCC and GND of sensors to reduce noise
 
 ## Group A: The I2C Pair (Pins 20 & 21)
 
@@ -251,17 +301,25 @@ Voltage Sensor (-) input ──→ Battery - (Ground)
 ```
 
 ### DO Sensor (Dissolved Oxygen):
+
+**Optional:** Solder a **0.1uF ceramic capacitor** across VCC and GND to filter noise.
+
 ```
 DO Sensor VCC    ────→ Arduino 5V
 DO Sensor GND    ────→ Arduino GND
 DO Sensor Signal ────→ Arduino A1
 ```
 
+Use **JST connector** on DO probe cable for easy disconnect!
+
 ---
 
 ## Group C: The Load Cell (Pins 8 & 9)
 
 ### HX711 Amplifier:
+
+**Optional:** Solder a **0.1uF ceramic capacitor** across VCC and GND.
+
 ```
 HX711 VCC ────→ Arduino 5V
 HX711 GND ────→ Arduino GND
@@ -290,38 +348,72 @@ All input devices (sensors) are now connected!
 
 **Goal:** Connect the things that move or see.
 
-## Motor Driver Logic Wires
+## DC Motor (Feeding Spinner)
 
+### Motor Driver Logic Wires:
 ```
 L298N IN1 ────→ Arduino Pin 10
 L298N IN2 ────→ Arduino Pin 11
 L298N ENA ────→ Arduino Pin 12 (PWM speed control)
 ```
 
-## Motor Power Wires
-
-Connect your 12V gear motor:
+### Motor Power Wires:
 ```
 Motor Wire 1 ────→ L298N OUT1
 Motor Wire 2 ────→ L298N OUT2
 ```
 
-## Servo Motor
+### Motor Protection:
+Install **flyback diodes** across motor terminals to prevent voltage spikes:
+```
+Diode 1: Striped end (cathode) → Motor terminal connected to OUT1
+         Plain end (anode)     → Motor terminal connected to OUT2
 
+Diode 2: Striped end (cathode) → Motor terminal connected to OUT2
+         Plain end (anode)     → Motor terminal connected to OUT1
 ```
-Servo Signal (Orange/Yellow) ────→ Arduino Pin 6
-Servo VCC (Red)              ────→ Arduino 5V
-Servo GND (Brown/Black)      ────→ Arduino GND
+*(Forms an "X" pattern across motor terminals)*
+
+---
+
+## Servo Motor (Gate/Shaker)
+
+**IMPORTANT:** Power servo from Buck Converter, NOT Arduino 5V pin!
+
+### Power (from Buck Converter 5V output):
 ```
+Servo VCC (Red)         ────→ Buck Converter OUT+ (5V)
+Servo GND (Brown/Black) ────→ Buck Converter OUT- (GND)
+```
+
+### Capacitor for Power Smoothing:
+Install **1000uF capacitor** across Buck Converter output:
+```
+Capacitor (+) leg ────→ Buck Converter OUT+ (5V)
+Capacitor (-) leg ────→ Buck Converter OUT- (GND)
+```
+*This prevents voltage drops when servo moves suddenly.*
+
+### Signal (to Arduino):
+```
+Servo Signal (Orange/Yellow) ────→ Arduino Pin 6 (PWM)
+```
+
+Use **JST connector** on servo wires for easy disconnect!
+
+---
 
 ## ESP32-CAM (Power Only!)
 
+Power from Buck Converter (same 5V rail as Servo):
 ```
-ESP32-CAM 5V  ────→ Arduino 5V (or dedicated 5V supply)
-ESP32-CAM GND ────→ Arduino GND
+ESP32-CAM 5V  ────→ Buck Converter OUT+ (5V)
+ESP32-CAM GND ────→ Buck Converter OUT- (GND)
 ```
 
 **That's it!** The camera communicates via WiFi - no data wires needed.
+
+---
 
 ### IMPORTANT: Flash ESP32-CAM BEFORE mounting!
 
@@ -355,6 +447,17 @@ const char* WIFI_PASSWORD = "YourPassword";
 
 ---
 
+# MISSION 5: Final Cable Management
+
+**Goal:** Clean up and protect all connections.
+
+1. **Heat Shrink**: Apply to all soldered wire joints
+2. **Zip Ties**: Bundle loose wires together
+3. **Check**: Ensure no loose wires can touch circuit boards
+4. **Seal**: Apply silicone around cable glands if needed
+
+---
+
 # YOU ARE DONE!
 
 ## Quick Reference: Arduino Pin Summary
@@ -362,11 +465,11 @@ const char* WIFI_PASSWORD = "YourPassword";
 | Pin | Connected To |
 |-----|-------------|
 | Vin | 12V from Fuse Box |
-| 5V | Powers ESP32, sensors, servo |
+| 5V | Powers sensors, RTC, LCD |
 | GND | Common ground |
 | A0 | Voltage Sensor |
 | A1 | DO Sensor |
-| D6 | Servo |
+| D6 | Servo Signal |
 | D8 | HX711 DT |
 | D9 | HX711 SCK |
 | D10 | L298N IN1 |
@@ -374,8 +477,31 @@ const char* WIFI_PASSWORD = "YourPassword";
 | D12 | L298N ENA |
 | D18 (TX1) | → Logic Shifter → ESP32 RX2 |
 | D19 (RX1) | → Logic Shifter → ESP32 TX2 |
-| D20 (SDA) | RTC + LCD (shared) |
-| D21 (SCL) | RTC + LCD (shared) |
+| D20 (SDA) | RTC + LCD (shared I2C) |
+| D21 (SCL) | RTC + LCD (shared I2C) |
+
+## Where Your Small Parts Go
+
+| Component | Where It Goes |
+|-----------|---------------|
+| **Wire Ferrules** | Every screw terminal (MPPT, Fuse Box, Buck Converter, ESP32 Extender) |
+| **Ring Terminals** | Battery bolt connections |
+| **JST Connectors** | DO sensor probe, Load cell, Servo, Solar panel (easy disconnect) |
+| **Heat Shrink** | All soldered wire joints |
+| **1000uF Capacitor** | Across Buck Converter output (+ to 5V, - to GND) |
+| **0.1uF Ceramic Caps** | Across sensor VCC/GND pins (noise filter) |
+| **10k Resistors** | I2C pull-ups if needed (usually not required) |
+| **Flyback Diodes** | Across DC motor terminals (spike protection) |
+| **Zip Ties** | Bundle wires neatly inside enclosure |
+
+## Fuse Box Configuration
+
+| Slot | Fuse | Powers |
+|------|------|--------|
+| 1 | 5A | Arduino Vin |
+| 2 | 10A | L298N Motor Driver (12V) |
+| 3 | 5A | Buck Converter → Servo + ESP32-CAM |
+| 4 | 5A | Spare |
 
 ---
 
@@ -395,10 +521,16 @@ const char* WIFI_PASSWORD = "YourPassword";
 1. Check 12V at motor driver
 2. Verify control pins (10, 11, 12)
 3. Test motor directly with 12V
+4. Check flyback diodes orientation
+
+### Servo Not Moving?
+1. Check Buck Converter output (should be 5V)
+2. Verify signal wire on Pin 6
+3. Check 1000uF capacitor polarity (+ to 5V)
 
 ### ESP32-CAM No Video?
 1. Correct WiFi credentials?
-2. Stable 5V power?
+2. Stable 5V from Buck Converter?
 3. Correct IP address?
 
 ---
