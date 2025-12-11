@@ -13,10 +13,14 @@ class MainNavHost extends StatefulWidget {
 class _MainNavHostState extends State<MainNavHost> {
   int _currentIndex = 0;
 
-  static const List<Widget> _screens = <Widget>[
-    DashboardScreen(),
-    SensorsScreen(),
-    SettingsScreen(),
+  void _navigateToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
+
+  List<Widget> get _screens => <Widget>[
+    DashboardScreen(onNavigateToSensors: () => _navigateToTab(1)),
+    const SensorsScreen(),
+    const SettingsScreen(),
   ];
 
   @override

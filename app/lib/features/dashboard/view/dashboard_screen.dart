@@ -5,7 +5,9 @@ import '../viewmodel/dashboard_viewmodel.dart';
 import '../../../core/services/real_bluetooth_service.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback? onNavigateToSensors;
+
+  const DashboardScreen({super.key, this.onNavigateToSensors});
 
   @override
   Widget build(BuildContext context) {
@@ -87,18 +89,21 @@ class DashboardScreen extends StatelessWidget {
                 title: 'Dissolved Oxygen',
                 value: '${status.dissolvedOxygen.toStringAsFixed(1)} mg/L',
                 icon: Icons.water,
+                onTap: onNavigateToSensors,
               ),
               const SizedBox(height: 12),
               SensorCard(
                 title: 'Feed Level',
                 value: '${status.feedLevel} %',
                 icon: Icons.inventory_2,
+                onTap: onNavigateToSensors,
               ),
               const SizedBox(height: 12),
               SensorCard(
                 title: 'Battery Status',
                 value: '${status.batteryStatus} %',
                 icon: Icons.battery_charging_full,
+                onTap: onNavigateToSensors,
               ),
             ],
           ),

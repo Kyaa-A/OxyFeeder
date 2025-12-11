@@ -108,7 +108,7 @@ class SettingsScreen extends StatelessWidget {
                       for (int i = 0; i < viewModel.feedingSchedules.length; i++) ...[
                         ListTile(
                           leading: const Icon(Icons.access_time),
-                          title: Text('${viewModel.feedingSchedules[i].timeLabel}'),
+                          title: Text(viewModel.feedingSchedules[i].timeLabel),
                           subtitle: Text('${viewModel.feedingSchedules[i].durationSeconds} seconds feed'),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
